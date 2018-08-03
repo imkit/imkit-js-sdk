@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset=utf-8>
+  <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+  <title>IMKit | in-app chat solution</title>
+  <base href=/>
+  <link rel=manifest href="static/manifest.json">
+  <link href="static/css/custom.css" rel="stylesheet">
+  <link href="static/css/app.css" rel="stylesheet">
+</head>
+
+<body>
+  <div id="imkc"></div>
+  <script type="text/javascript" src="static/js/app.js"></script>
+</body>
+<script type="text/javascript">
+  var tokenMode = "sign"; // sign bind
+  var config = {
+    url: "https://chat.fangho.com/", // chat server
+    authUrl: "https://auth.fangho.com", // auth server
+    clientKey: "fangho_imkit_0412_2018_001_clientkey",
+    apiKey: "fangho_imkit_0412_2018_001_apikey",
+    actionIconPos: 'bottom' // right, bottom
+  }
+  var admin = 'gagu'; // bind 需要；或是 sign 建新使用者時需要
+  // 1. 有 authToken 直接用來登入
+  // 2. 有 uid 且 tokenMode === sign，取得 token 後登入
+  // 3. 都沒有，建立新 user
+  var uid = 'gagu';
+  var authToken;
+
+  run();
+
+  async function run() {
+    const APILib = IMKC.getAPILib(config);
+    if (tokenMode === "sign") {
+      if (authToken) {
+        openChat();
+      } else if (uid) {
+        let authTokenRes = await APILib.platform.sign(uid);
+        authToken = authTokenRes.token;
+        openChat();
+      } else {
+        let adminTokenRes = await APILib.platform.sign(admin);
+        adminToken = adminTokenRes.token;
+        await APILib.auth.chatIn(adminToken);
+
+        var time = new Date().getTime();
+        uid = 'user' + time;
+        room = 'room' + time;
+        await APILib.platform.updateClient(
+          'email@email.email',
+          uid,
+          uid,
+          `http://placekitten.com/206/192`
+        );
+
+        let authTokenRes = await APILib.platform.sign(uid);
+        authToken = authTokenRes.token;
+        await APILib.auth.chatIn(authToken);
+
+        await APILib.room.createRoom({
+          _id: room,
+          name: '',
+          cover: '',
+          description: ''
+        }, false);
+        await APILib.room.joinRoom(room);
+
+        await APILib.room.addMember(room, admin);
+        openChat();
+      }
+    } else if (tokenMode === "bind") {
+      await APILib.auth.chatIn(admin);
+      if (authToken) {
+        await APILib.platform.bindToken(authToken, authToken);
+        openChat();
+      } else {
+        var time = new Date().getTime();
+        uid = 'user' + time;
+        room = 'room' + time;
+        await APILib.platform.updateClient(
+          'email@email.email',
+          uid,
+          uid,
+          `http://placekitten.com/195/209`
+        );
+        await APILib.platform.bindToken(uid, uid);
+        await APILib.auth.chatIn(uid);
+        authToken = uid;
+
+        await APILib.room.createRoom({
+          _id: room,
+          name: '',
+          cover: '',
+          description: ''
+        }, false);
+        await APILib.room.joinRoom(room);
+
+        await APILib.room.addMember(room, admin);
+        openChat();
+      }
+    }
+  }
+  function openChat() {
+    const imkit = IMKC.init({
+      debug: false,
+      lang: 'tw', // default language
+      url: config.url,
+      room: {
+        id: null
+      },
+      domain: '/',
+      clientKey: config.clientKey,
+      authToken: authToken,
+      bucketName: "chatserver-upload", // S3 bucketName
+      googleApiKey: 'AIzaSyCimtHXyW8GfZ50Vx_YcFFmaBu7G2Wm2cw', // AIzaSyB4ZoKa7v8C8blV-9CSW1JJxwqU9YgMQ8M
+      rightPage: null,
+      /*
+      rightPage: {
+        url:'static/right.html',
+        query: {
+          roomId: 'rid',
+        }
+      },
+      */
+      events: {
+        onUnreadChange: function (unread) {
+          // alert(unread)
+        }
+      },
+      useReply: true,
+      skins: ['default', 'kagulu'],
+      skin: 'default',
+      pictureViewModel: 'rich', // simple or rich
+      maxUploadFileSize: 200, // (MB)
+      layout: {
+        list: true,
+        info: true
+      },
+      listSetting: {
+        showMemberCount: true
+      },
+      supportMsgType: {
+        emoji: "傳送表情符號",
+        sticker: "傳送貼圖",
+        image: "傳送圖片",
+        audio: "傳送音頻",
+        video: "傳送影片",
+        location: "傳送位置"
+      },
+      actionIconPos: config.actionIconPos, // right, bottom
+      supportMsgInfo: {
+        readReceipt: true
+      },
+      runForMobileDevice: false,
+      showJoinMessage: true,
+      showTodayMessage: true,
+      showInfoEdit: true,
+      messageColor: {
+        background: '#F26F21',
+        color: '#FFF'
+      },
+      useNotification: true,
+      urlPreviewApi: 'https://chatkit.co/url',
+      appName: 'IMKit Demo',
+      firebaseConfig: {
+        apiKey: 'AIzaSyDH6fgpRFaH7vIqAcGQi48wgvNf8BJ9q1I',
+        authDomain: 'fir-chat-server.firebaseapp.com',
+        databaseURL: 'https://fir-chat-server.firebaseio.com',
+        projectId: 'fir-chat-server',
+        storageBucket: 'fir-chat-server.appspot.com',
+        messagingSenderId: '970263218499'
+      }
+    })
+  }</script>
+
+</html>

@@ -26,75 +26,104 @@ const APILib = IMKC.getAPILib({
 #### sign 模式
 
 ```javascript
-let adminClientId = 'gagu';
-let AdminTokenRes = await APILib.platform.sign(adminClientId);
-let AdminToken = AdminTokenRes.token;
-
-await APILib.auth.chatIn(AdminToken);
+let adminClientId = "gagu";
+APILib.platform.sign(adminClientId).then(function(res) {
+  let AdminTokenRes = res;
+  let AdminToken = AdminTokenRes.token;
+  APILib.auth.chatIn(AdminToken).then(function() {
+    // do something else
+  });
+});
 ```
 
 #### bind 模式
 
 ```javascript
-let adminClientId = 'gagu';
+let adminClientId = "gagu";
 let AdminToken = adminClientId;
-await APILib.platform.bindToken(adminClientId, AdminToken);
-
-await APILib.auth.chatIn(AdminToken);
+APILib.platform.bindToken(adminClientId, AdminToken).then(function() {
+  APILib.auth.chatIn(AdminToken).then(function() {
+    // do something else
+  });
+});
 ```
 
 ### 建立 chat user
 
 ```javascript
-await APILib.platform.updateClient(
+APILib.platform
+  .updateClient(
     email, // email
     nickname, // 暱稱
     clientId, // 每個 chat user 具有唯一值 clientId，以識別身分，如果 clientId 已存在會 update user，不存在會 create user
     avatar // Image url
-);
+  )
+  .then(function() {
+    // do something else
+  });
 ```
 
 ### 建立 chat room
 
 ```javascript
 let room = {
-    _id: 'ID(string), 不可重複，可不傳，會隨機產生',
-    name: '房間名稱',
-    cover: 'Image url',
-    description: '房間描述'
-}
+  _id: "ID(string), 不可重複，可不傳，會隨機產生",
+  name: "房間名稱",
+  cover: "Image url",
+  description: "房間描述"
+};
 let autoJoin = false; // 是否將管理者加入房間
-let createRoomRes = await APILib.room.createRoom(room, autoJoin);
-
-room.id = createRoomRes.id; //取得房間 id
+APILib.room.createRoom(room, autoJoin).then(function(res) {
+  let createRoomRes = res;
+  room.id = createRoomRes.id; // 取得房間 id
+});
 ```
 
 ### 將 chat user 加入 chat room
 
 ```javascript
 if (room.id) {
-    // 取得房間資訊
-    let roomInfo = await APILib.room.searchOneRoom(room.id);
-
+  // 取得房間資訊
+  APILib.room.searchOneRoom(room.id).then(function(res) {
+    let roomInfo = res;
     // 檢查 chat user 是否已經在 chat room
-    let find = roomInfo.members.find(member => {
-        return member.id === clientId;
-    });
+    let find = null;
+    for (let idx = 0; idx < roomInfo.members.length; idx++) {
+      if (roomInfo.members[idx].id === clientId) {
+        find = roomInfo.members[idx];
+      }
+    }
+
     // 如果沒有，加入房間
     if (!find) {
-        // 方法一，管理者必須是房間成員
-        await APILib.room.addMember(room.id, clientId);
-        // 方法二，chatIn 到 chat user 身分，執行 join
-        // sign 模式
-        let tokenRes = await APILib.platform.sign(clientId);
-        let token = tokenRes.token;
-        // bind 模式
-        let tokenRes = clientId
-        await APILib.platform.bindToken(clientId, tokenRes);
+      // 方法一，管理者必須是房間成員
+      APILib.room.addMember(room.id, clientId).then(function() {
+        // do something else
+      });
 
-        await APILib.auth.chatIn(token);
-        await APILib.room.joinRoom(room.id);
+      // 方法二，chatIn 到 chat user 身分，執行 join
+      // sign 模式
+      APILib.platform.sign(clientId).then(function(res) {
+        let tokenRes = res;
+        let token = tokenRes.token;
+        APILib.auth.chatIn(token).then(function() {
+          APILib.room.joinRoom(room.id).then(function() {
+            // do something else
+          });
+        });
+      });
+
+      // bind 模式
+      let token = clientId;
+      APILib.platform.bindToken(clientId, tokenRes).then(function() {
+        APILib.auth.chatIn(token).then(function() {
+          APILib.room.joinRoom(room.id).then(function() {
+            // do something else
+          });
+        });
+      });
     }
+  });
 }
 ```
 
@@ -129,29 +158,35 @@ const APILib = IMKC.getAPILib({
 #### sign 模式
 
 ```javascript
-let clientId = 'gagu';
-let tokenRes = await APILib.platform.sign(clientId);
-let token = tokenRes.token;
-
-await APILib.auth.chatIn(token);
+let clientId = "gagu";
+APILib.platform.sign(clientId).then(function(res) {
+  let tokenRes = res;
+  let token = tokenRes.token;
+  APILib.auth.chatIn(token).then(function() {
+    // do something else
+  });
+});
 ```
 
 #### bind 模式
 
 ```javascript
-let clientId = 'gagu';
+let clientId = "gagu";
 let token = clientId;
-await APILib.platform.bindToken(clientId, token);
-
-await APILib.auth.chatIn(token);
+APILib.platform.bindToken(clientId, token).then(function() {
+  APILib.auth.chatIn(token).then(function() {
+    // do something else
+  });
+});
 ```
 
 ### 取得 badge
 
 ```javascript
 async function checkBadge() {
-  let res = await APILib.me.getBadge();
-  console.log(res.badge);
+  APILib.me.getBadge().then(function(res) {
+    console.log(res.badge);
+  });
 }
 ```
 
@@ -186,17 +221,22 @@ const APILib = IMKC.getAPILib({
 #### sign 模式
 
 ```javascript
-let clientId = 'gagu';
-let tokenRes = await APILib.platform.sign(clientId);
-let token = tokenRes.token;
+let clientId = "gagu";
+APILib.platform.sign(clientId).then(function(res) {
+  let tokenRes = res;
+  let token = tokenRes.token;
+  // do something else
+});
 ```
 
 #### bind 模式
 
 ```javascript
-let clientId = 'gagu';
+let clientId = "gagu";
 let token = clientId;
-await APILib.platform.bindToken(clientId, token);
+APILib.platform.bindToken(clientId, token).then(function() {
+  // do something else
+});
 ```
 
 ### 開啟聊天室

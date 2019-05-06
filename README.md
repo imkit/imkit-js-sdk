@@ -30,9 +30,9 @@ let adminClientId = "gagu";
 APILib.platform.sign(adminClientId).then(function(res) {
   let AdminTokenRes = res;
   let AdminToken = AdminTokenRes.token;
-  APILib.auth.chatIn(AdminToken).then(function() {
-    // do something else
-  });
+  return APILib.auth.chatIn(AdminToken);
+}).then(function() {
+  // do something else
 });
 ```
 
@@ -42,9 +42,9 @@ APILib.platform.sign(adminClientId).then(function(res) {
 let adminClientId = "gagu";
 let AdminToken = adminClientId;
 APILib.platform.bindToken(adminClientId, AdminToken).then(function() {
-  APILib.auth.chatIn(AdminToken).then(function() {
-    // do something else
-  });
+  return APILib.auth.chatIn(AdminToken);
+}).then(function() {
+  // do something else
 });
 ```
 
@@ -87,12 +87,7 @@ if (room.id) {
   APILib.room.searchOneRoom(room.id).then(function(res) {
     let roomInfo = res;
     // 檢查 chat user 是否已經在 chat room
-    let find = null;
-    for (let idx = 0; idx < roomInfo.members.length; idx++) {
-      if (roomInfo.members[idx].id === clientId) {
-        find = roomInfo.members[idx];
-      }
-    }
+    let find = roomInfo.members.find(member => member.id === clientId)
 
     // 如果沒有，加入房間
     if (!find) {
@@ -106,21 +101,21 @@ if (room.id) {
       APILib.platform.sign(clientId).then(function(res) {
         let tokenRes = res;
         let token = tokenRes.token;
-        APILib.auth.chatIn(token).then(function() {
-          APILib.room.joinRoom(room.id).then(function() {
-            // do something else
-          });
-        });
+        return APILib.auth.chatIn(token);
+      }).then(function() {
+        return APILib.room.joinRoom(room.id);
+      }).then(function() {
+        // do something else
       });
 
       // bind 模式
       let token = clientId;
       APILib.platform.bindToken(clientId, tokenRes).then(function() {
-        APILib.auth.chatIn(token).then(function() {
-          APILib.room.joinRoom(room.id).then(function() {
-            // do something else
-          });
-        });
+        return APILib.auth.chatIn(token);
+      }).then(function() {
+        return APILib.room.joinRoom(room.id);
+      }).then(function() {
+        // do something else
       });
     }
   });
@@ -174,9 +169,9 @@ APILib.platform.sign(clientId).then(function(res) {
 let clientId = "gagu";
 let token = clientId;
 APILib.platform.bindToken(clientId, token).then(function() {
-  APILib.auth.chatIn(token).then(function() {
-    // do something else
-  });
+  return APILib.auth.chatIn(token);
+}).then(function() {
+  // do something else
 });
 ```
 

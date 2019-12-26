@@ -1,4 +1,4 @@
-# IMKit Web SDK
+# IMKit JS SDK
 
 取得 `token` 有兩種模式，`sign` 與 `bind`，你必須先確認你需要的是什麼模式(通常是 `bind`)。
 
